@@ -11,3 +11,5 @@ if exist %file% (
 ) else (
     echo Could not find the right file
 )
+
+:: hello world
