@@ -33,13 +33,15 @@ echo linking kernel.o file...
 "mingw64/bin/ld" -r -m i386pe -T NUL -o build/kernel/kernel.temp -Ttext 0x100000 build/boot/kernel-entry.o build/kernel/kernel.o
 
 echo copying kernel.temp file...
-"migw64/bin/objcopy" -O binary build/kernel/kernel.temp build/kernel/kernel.bin
+cd %stdRoot%/build/kernel && "migw64/bin/objcopy" -O binary kernel.temp kernel.bin
 ::"migw64/x86_64-w64-mingw32/bin/objcopy" -O binary build/kernel/kernel.temp build/kernel/kernel.bin
 
 :: Possible Solutions
 ::https://stackoverflow.com/questions/30939593/mingws-ld-cannot-perform-pe-operations-on-non-pe-output-file
 ::https://9to5answer.com/architecture-of-i386-input-file-is-incompatible-with-i386-x86-64
 ::https://stackoverflow.com/questions/32279598/how-to-compile-and-link-c-and-asm-together-on-windows-for-my-os
+
+cd %stdRoot%
 
 :: create floppy image
 echo create floppy image file
