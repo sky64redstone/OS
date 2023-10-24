@@ -8,5 +8,5 @@ On Windows:
     Then run "compile" and after that run "run"
 
 ## Dependencies
-mingw64 for compilation -> I used winlibs.com
+mingw64 for compilation -> I used winlibs.com <br/>
 qemu for emulation
