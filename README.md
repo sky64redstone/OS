@@ -1,5 +1,6 @@
 # OS
-A learning by doing Operatig System
+A learning by doing Operatig System <br/>
+TODO: Better Name
 
 ## How to
 This operating system comes with a compiler configuration for windows and mingw64. <br/>
