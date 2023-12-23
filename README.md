@@ -17,5 +17,5 @@ NOTE: the linking of the bootloader with the c-source-code doesn't work on windo
 The Kernel is located in src/kernel/ and for now it just tries to print a x out (see src/kernel/kernel.c -> kmain() {...})
 
 ## Dependencies
-mingw64 for compilation -> I used winlibs.com <br/>
+mingw64 for compilation -> I used winlibs.com (NO liability for any damage)<br/>
 qemu for emulation
