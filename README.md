@@ -7,7 +7,7 @@ This operating system comes with a compiler configuration for windows and mingw6
 On Windows:<br/>
     Go in the cmd to the current Directory and type "clear", that should create the folder build. <br/>
     Then run "compile" and after that run "run"
-<br/><br/>On Linux~<br/>
+<br/><br/>On Linux:<br/>
     Work in Progress
 
 ## Bootloader
