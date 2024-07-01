@@ -1,4 +1,4 @@
-# Banana OS
+# OS
 A learning by doing Operatig System <br/>
 
 ## How to
