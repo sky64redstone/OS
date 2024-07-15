@@ -1,4 +1,6 @@
+#include "../drivers/screen.h"
+
 void kmain() {
-    char* video_memory = (char*)0xb8000;
-    *video_memory = 'X';
+    screen_clear();
+    screen_print_at("test string", 0, 0);
 }

@@ -64,10 +64,15 @@
 load_kernel:
 	mov si, LOAD_KERNEL_MSG
 	call print_str
+	mov dx, [BOOT_DRIVE]
+	and dx, 0x00FF
+	call print_hex
+	mov si, ENDL_MSG
+	call print_str
 	
 	; load 15 secors increase this value when 
 	; the kernel has an unexprected bug
-	mov dh, 1
+	mov dh, 15
 	mov bx, KERNEL_OFFSET
 	mov dl, [BOOT_DRIVE]
 	call disk_load
@@ -85,9 +90,10 @@ BEGIN_PM:
 
 ; BOOT_DRIVE stores the bootdrive from DL
 BOOT_DRIVE: db 0
+ENDL_MSG: db ENDL, 0
 REAL_MODE_MSG: db "startig from 16 bit real mode...", ENDL, 0
-LOAD_KERNEL_MSG: db "loading kernel from disk...", ENDL, 0
-PROT_MODE_MSG: db "successfully landed in 32 bit protected mode...", 0
+LOAD_KERNEL_MSG: db "loading kernel from disk: ", 0, ENDL, 0
+PROT_MODE_MSG: db ENDL, "successfully landed in 32 bit protected mode...", 0
 
 ; When compiled, our program must fit into 512 bytes,
 ; with the last two bytes being the magic number,

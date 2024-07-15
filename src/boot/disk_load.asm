@@ -7,9 +7,12 @@ disk_load:
 
     	; BIOS read sector function
     	mov ah, 0x02
-    	; Rea h
+    	; Read dh sectors
+	mov al, dh
     	; Select head 0
     	mov dh, 0x00
+	; select cylinder 0
+	mov ch, 0x00
     	; Start reading from second sector (i.e.
     	; after the boot sector)
 	; starts from 1, not 0
@@ -31,14 +34,14 @@ disk_load:
 
 disk_read_error:
     	mov si, DISK_ERROR_READ_MSG
-    	call print_str
-	mov dx, ax
-	call print_hex
-    	jmp $
+    	jmp disk_error
 
 disk_cmp_error:
     	mov si, DISK_ERROR_SECTORS_MSG
-    	call print_str
+	jmp disk_error
+
+disk_error:
+	call print_str
 	mov dx, ax
 	call print_hex
 	jmp $
