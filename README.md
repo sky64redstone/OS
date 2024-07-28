@@ -3,7 +3,7 @@ A learning by doing Operatig System <br/>
 
 ## How to
 This operating system comes with a Makefile that uses gcc, ld and nasm.
-<br/><br/>Build:<br/>
+<br/><br/>Build & Run:<br/>
     bash: make
 <br/><br/>Get Help:<br/>
     bash: make help
