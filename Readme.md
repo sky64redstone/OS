@@ -28,14 +28,15 @@ Disassemble the operating system
 $ make dis
 ```
 
-## Bootloader
+## Components
+### Bootloader
 The bootloader is located in the boot/ git submodule.
 
-## Kernel
+### Kernel
 The kernel is located in the kernel/ directory.<br>
 kmain() is the kernel entry and is implemented in the file kernel/kernel.c
 
-## Drivers
+### Drivers
 The drivers are located in the drivers/ directory.<br>
 
 ## Troubleshooting
@@ -43,7 +44,7 @@ The drivers are located in the drivers/ directory.<br>
 The kernel may not have been loaded fully. Try increasing the number of loaded
 sectors in the boot/src/bootloader.asm file.
 It is recommended to set the register dh to x, with: `x * 512 = sizeof(kernel.bin)`
-```
+```nasm
   mov si, init_msg
   call print
 
