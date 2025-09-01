@@ -37,14 +37,39 @@ int _get_cursor_offset() {
   offset |= port_read8(REG_SCREEN_DATA);
 }
 
+int _handle_scrolling(int offset) {
+  int y = _get_screen_y(offset);
+
+  if (y >= SCREEN_H) {
+    const int diff = SCREEN_H - y + 1;
+    const int count = SCREEN_W * diff * 2;
+    const int mem_max = SCREEN_W * SCREEN_H * 2;
+    const int max = mem_max - count;
+
+    for (int i = 0; i < max; i++) {
+      SCREEN_MEM[i] = SCREEN_MEM[i + count];
+    }
+
+    for (int i = max; i < mem_max; i += 2) {
+      SCREEN_MEM[i] = ' ';
+      SCREEN_MEM[i + 1] = 0x0F;
+    }
+  
+    offset = _get_screen_offset(0, SCREEN_H - 1);
+
+    return offset;
+  }
+
+  return offset;
+}
+
 int _kput(char c, int offset) {
   if (offset < 0) {
     offset = _get_cursor_offset();
   }
 
   if (c == '\n') {
-    int y = _get_screen_y(offset) + 1;
-    offset = _get_screen_offset(0, y + 1);
+    offset = _get_screen_offset(0, _get_screen_y(offset) + 1);
   } else {
     int off = offset * 2;
     SCREEN_MEM[off] = c;
@@ -52,7 +77,7 @@ int _kput(char c, int offset) {
     offset++;
   }
 
-  //offset = _handle_scrolling(offset);
+  offset = _handle_scrolling(offset);
 
   return offset;
 }

@@ -28,6 +28,7 @@ clean:
 build/image.bin: build/boot/src/bootloader.bin build/kernel.bin
 	@echo -e $(red)Combining the kernel and bootloader$(reset)...
 	@cat $^ > $@
+	@dd if=/dev/zero bs=1 count=5k >> $@ 2>/dev/null
 
 build/kernel.bin: build/boot/src/kernel-entry.asm.o ${ofiles}
 	@echo -e $(purple)Linking the kernel$(reset)...
