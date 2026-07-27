@@ -41,16 +41,12 @@ isr_common:
   ; pops cs, eip, eflags, ss, and esp
   iret
 
-irq_common:
-  add esp, 8 ; remove int_no and err_no
-  iret
-
 %macro ISR_NORMAL 1
   global isr%1
   isr%1:
     cli
-    push byte %1
     push byte 0
+    push byte %1
     jmp isr_common
 %endmacro
 
@@ -100,8 +96,8 @@ ISR_NORMAL 31 ; 31: Reserved
   global irq%1
   irq%1:
     cli
-    push byte %1 + 32
     push byte 0
+    push byte %1 + 32
     jmp isr_common
 %endmacro
 

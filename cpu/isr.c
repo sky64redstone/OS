@@ -115,21 +115,6 @@ void print_uint32(uint32_t i) {
 }
 
 void isr_handler(isr_regs_t* regs) {
-  if (regs->int_no >= 32) {
-    pic_send_eoi(regs->int_no);
-    kprint("IRQ received\n", -1, -1);
-    return;
-  }
-
-
-  const char* msg = "Out of range for int number"; // default
-  if (regs->int_no < sizeof(exception_msg) / sizeof(exception_msg[0])) {
-    msg = exception_msg[regs->int_no];
-  }
-
-  kprint("Interrupt:\nException: ", -1, -1);
-  kprint(msg, -1, -1);
-
   kprint("\nregs->int_no: ", -1, -1);
   print_uint32(regs->int_no);
 
@@ -141,5 +126,20 @@ void isr_handler(isr_regs_t* regs) {
 
   kprint("\nregs->cs: ", -1, -1);
   print_uint32(regs->cs);
+
+  if (regs->int_no >= 32) {
+    pic_send_eoi(regs->int_no);
+    kprint("\nIRQ received\n", -1, -1);
+    return;
+  }
+
+
+  const char* msg = "Out of range for int number"; // default
+  if (regs->int_no < sizeof(exception_msg) / sizeof(exception_msg[0])) {
+    msg = exception_msg[regs->int_no];
+  }
+
+  kprint("\nException: ", -1, -1);
+  kprint(msg, -1, -1);
   kput('\n', -1, -1);
 }

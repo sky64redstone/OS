@@ -31,11 +31,6 @@ void idt_register(int n, uint32_t handler) {
 extern void load_idt(idt_ptr_t* ptr);
 
 void idt_load() {
-  /*unsigned long idt_ptr[2];
-  unsigned long idt_addr = (unsigned long)idt;
-	idt_ptr[0] = (sizeof (idt_gate_t) * IDT_SIZE) + (low16(idt_addr) << 16);
-	idt_ptr[1] = idt_addr >> 16;*/
-
   idt_ptr_t idt_ptr;
 
   idt_ptr.limit = sizeof(idt_gate_t) * IDT_SIZE - 1;
