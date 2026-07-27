@@ -6,6 +6,7 @@
 #define SCREEN_H 25
 #define REG_SCREEN_CTRL 0x3D4
 #define REG_SCREEN_DATA 0x3D5
+#define DEFAULT_COLOR 0x0F
 
 int _get_screen_offset(int x, int y) {
   return y * SCREEN_W + x;
@@ -35,6 +36,7 @@ int _get_cursor_offset() {
   // low byte
   port_write8(REG_SCREEN_CTRL, 15);
   offset |= port_read8(REG_SCREEN_DATA);
+  return offset;
 }
 
 int _handle_scrolling(int offset) {
@@ -52,7 +54,7 @@ int _handle_scrolling(int offset) {
 
     for (int i = max; i < mem_max; i += 2) {
       SCREEN_MEM[i] = ' ';
-      SCREEN_MEM[i + 1] = 0x0F;
+      SCREEN_MEM[i + 1] = DEFAULT_COLOR;
     }
   
     offset = _get_screen_offset(0, SCREEN_H - 1);
@@ -73,7 +75,7 @@ int _kput(char c, int offset) {
   } else {
     int off = offset * 2;
     SCREEN_MEM[off] = c;
-    SCREEN_MEM[off + 1] = 0x0F;
+    SCREEN_MEM[off + 1] = DEFAULT_COLOR;
     offset++;
   }
 
@@ -117,7 +119,7 @@ void clear_screen() {
   const int max_cells = SCREEN_W * SCREEN_H * 2;
   for (int offset = 0; offset < max_cells; offset += 2) {
     SCREEN_MEM[offset] = ' ';
-    SCREEN_MEM[offset + 1] = 0x0F;
+    SCREEN_MEM[offset + 1] = DEFAULT_COLOR;
   }
   _set_cursor_offset(0);
 }
