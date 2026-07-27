@@ -5,25 +5,33 @@ blue=`tput setaf 4`
 purple=`tput setaf 5`
 red=`tput setaf 9`
 
-cfiles=kernel/kernel.c drivers/ports.c drivers/vga/text.c
-ofiles=$(patsubst %.c,build/%.c.o,$(cfiles))
+cfiles=kernel/kernel.c drivers/ports.c drivers/vga/text.c cpu/idt.c cpu/isr.c
+asmfiles=cpu/interrupts.asm
+
 cflags=-m32 -ffreestanding -nostdlib -fno-pic -fno-stack-protector -I.
 ldflags=-m elf_i386 -T linker.ld -nostdlib
 
+ofiles=$(patsubst %.c,build/%.c.o,$(cfiles)) $(patsubst %.asm,build/%.asm.o,$(asmfiles))
+
 run: build/image.bin
 	@echo -e $(green)Running on x86_64 hardware$(reset)...
-	@qemu-system-x86_64 -drive format=raw,file=$<
+	@qemu-system-x86_64 -no-reboot -drive format=raw,file=$<
 
 debug: build/image.bin
 	@echo -e $(green)Debugging on x86_64 hardware$(reset)...
 	@qemu-system-x86_64 -monitor stdio -drive format=raw,file=$<
 
+build: build/image.bin
+	@echo -e $(green)Built for x86_64 hardware$(reset)
+
 dis: build/image.bin
-	@echo -e $(yellow)Disassembling the image$(reset)...
+	@echo -e $(yellow)Disassembling kernel.elf in build/kernel.dis$(reset)...
+	@objdump -d build/kernel.elf > build/kernel.dis
+	@echo -e $(yellow)Disassembling the image in build/image.dis$(reset)...
 	@ndisasm -b 32 $< > build/image.dis
 
 clean:
-	@rm -r build/*
+	@rm -rf build/*
 
 build/image.bin: build/boot/src/bootloader.bin build/kernel.bin
 	@echo -e $(red)Combining the kernel and bootloader$(reset)...
