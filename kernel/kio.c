@@ -14,27 +14,6 @@ void kput(char c) {
 void kprint(const char* str) {
   stdout.print(str);
 }
-/*
-void kprint_num(unsigned int value, unsigned int base) {
-  const char symbols[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-  if (base < 2 || base > 36) {
-    return;
-  }
-
-  char buffer[MAX_BUFFER];
-  int i = MAX_BUFFER - 1;
-
-  buffer[i] = '\0';
-
-  do {
-    i--;
-    buffer[i] = symbols[value % base];
-    value /= base;
-  } while (value != 0 && i > 0);
-
-  kprint(&buffer[i]);
-}*/
 
 void kprint_num(unsigned int number, unsigned int base) {
   static const char digits[] = "0123456789ABCDEF";
