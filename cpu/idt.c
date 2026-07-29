@@ -20,12 +20,27 @@ typedef struct {
 
 idt_gate_t idt[IDT_SIZE];
 
-void idt_register(int n, uint32_t handler) {
+void idt_register(int n, uint32_t handler, uint8_t flags) {
   idt[n].low_offset  = low16(handler);
   idt[n].selector    = 0x08; // see GDT (boot/src/bootloader.asm:~188)
   idt[n].always0     = 0;
-  idt[n].flags       = 0b10001110;
+  idt[n].flags       = flags;
   idt[n].high_offset = high16(handler);
+  
+  //idt[n].flags       = 0b10001110;
+}
+
+void idt_clear(int from, int to) {
+  if (from < 0) {
+    from = 0;
+  }
+  if (to < 0) {
+    to = IDT_SIZE - 1;
+  }
+
+  for (int i = from; i <= to; i++) {
+    idt_register(i, 0, 0);
+  }
 }
 
 void idt_load() {

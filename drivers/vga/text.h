@@ -1,8 +1,8 @@
 #ifndef VGA_TEXT
   #define VGA_TEXT
 
-  void kput(char c, int x, int y);
-  void kprint(const char* str, int x, int y);
-  void clear_screen();
+  void vga_put(char c, int x, int y);
+  void vga_print(const char* str, int x, int y);
+  void vga_clear_screen();
 
 #endif

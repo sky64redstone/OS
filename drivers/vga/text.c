@@ -65,7 +65,7 @@ int _handle_scrolling(int offset) {
   return offset;
 }
 
-int _kput(char c, int offset) {
+int _vga_put(char c, int offset) {
   if (offset < 0) {
     offset = _get_cursor_offset();
   }
@@ -84,7 +84,7 @@ int _kput(char c, int offset) {
   return offset;
 }
 
-void kput(char c, int x, int y) {
+void vga_put(char c, int x, int y) {
   int offset;
   if (x < 0 || y < 0) {
     offset = -1;
@@ -92,19 +92,19 @@ void kput(char c, int x, int y) {
     offset = _get_screen_offset(x, y);
   }
 
-  offset = _kput(c, offset);
+  offset = _vga_put(c, offset);
   _set_cursor_offset(offset);
 }
 
-void _kprint(const char* str, int offset) {
+void _vga_print(const char* str, int offset) {
   while (*str != 0) {
-    offset = _kput(*str, offset);
+    offset = _vga_put(*str, offset);
     str++;
   }
   _set_cursor_offset(offset);
 }
 
-void kprint(const char* str, int x, int y) {
+void vga_print(const char* str, int x, int y) {
   int offset;
   if (x < 0 || y < 0) {
     offset = -1;
@@ -112,10 +112,10 @@ void kprint(const char* str, int x, int y) {
     offset = _get_screen_offset(x, y);
   }
 
-  _kprint(str, offset);
+  _vga_print(str, offset);
 }
 
-void clear_screen() {
+void vga_clear_screen() {
   const int max_cells = SCREEN_W * SCREEN_H * 2;
   for (int offset = 0; offset < max_cells; offset += 2) {
     SCREEN_MEM[offset] = ' ';

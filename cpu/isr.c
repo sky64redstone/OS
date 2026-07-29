@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "drivers/ports.h"
 #include "drivers/vga/text.h"
+#include "kernel/kio.h"
 
 // PIC Ports
 #define PIC1_CMD 0x20
@@ -11,6 +12,8 @@
 
 #define PIC_EOI 0x20
 #define ICW1 0x11
+
+#define IDT_INT 0x8E
 
 void pic_send_eoi(uint32_t int_no) {
   if (int_no >= 40) {
@@ -23,38 +26,38 @@ void pic_send_eoi(uint32_t int_no) {
 
 void isr_install() {
   // ISRs
-  idt_register( 0, (uint32_t)isr0);
-  idt_register( 1, (uint32_t)isr1);
-  idt_register( 2, (uint32_t)isr2);
-  idt_register( 3, (uint32_t)isr3);
-  idt_register( 4, (uint32_t)isr4);
-  idt_register( 5, (uint32_t)isr5);
-  idt_register( 6, (uint32_t)isr6);
-  idt_register( 7, (uint32_t)isr7);
-  idt_register( 8, (uint32_t)isr8);
-  idt_register( 9, (uint32_t)isr9);
-  idt_register(10, (uint32_t)isr10);
-  idt_register(11, (uint32_t)isr11);
-  idt_register(12, (uint32_t)isr12);
-  idt_register(13, (uint32_t)isr13);
-  idt_register(14, (uint32_t)isr14);
-  idt_register(15, (uint32_t)isr15);
-  idt_register(16, (uint32_t)isr16);
-  idt_register(17, (uint32_t)isr17);
-  idt_register(18, (uint32_t)isr18);
-  idt_register(19, (uint32_t)isr19);
-  idt_register(20, (uint32_t)isr20);
-  idt_register(21, (uint32_t)isr21);
-  idt_register(22, (uint32_t)isr22);
-  idt_register(23, (uint32_t)isr23);
-  idt_register(24, (uint32_t)isr24);
-  idt_register(25, (uint32_t)isr25);
-  idt_register(26, (uint32_t)isr26);
-  idt_register(27, (uint32_t)isr27);
-  idt_register(28, (uint32_t)isr28);
-  idt_register(29, (uint32_t)isr29);
-  idt_register(30, (uint32_t)isr30);
-  idt_register(31, (uint32_t)isr31);
+  idt_register( 0, (uint32_t)isr0, IDT_INT);
+  idt_register( 1, (uint32_t)isr1, IDT_INT);
+  idt_register( 2, (uint32_t)isr2, IDT_INT);
+  idt_register( 3, (uint32_t)isr3, IDT_INT);
+  idt_register( 4, (uint32_t)isr4, IDT_INT);
+  idt_register( 5, (uint32_t)isr5, IDT_INT);
+  idt_register( 6, (uint32_t)isr6, IDT_INT);
+  idt_register( 7, (uint32_t)isr7, IDT_INT);
+  idt_register( 8, (uint32_t)isr8, IDT_INT);
+  idt_register( 9, (uint32_t)isr9, IDT_INT);
+  idt_register(10, (uint32_t)isr10, IDT_INT);
+  idt_register(11, (uint32_t)isr11, IDT_INT);
+  idt_register(12, (uint32_t)isr12, IDT_INT);
+  idt_register(13, (uint32_t)isr13, IDT_INT);
+  idt_register(14, (uint32_t)isr14, IDT_INT);
+  idt_register(15, (uint32_t)isr15, IDT_INT);
+  idt_register(16, (uint32_t)isr16, IDT_INT);
+  idt_register(17, (uint32_t)isr17, IDT_INT);
+  idt_register(18, (uint32_t)isr18, IDT_INT);
+  idt_register(19, (uint32_t)isr19, IDT_INT);
+  idt_register(20, (uint32_t)isr20, IDT_INT);
+  idt_register(21, (uint32_t)isr21, IDT_INT);
+  idt_register(22, (uint32_t)isr22, IDT_INT);
+  idt_register(23, (uint32_t)isr23, IDT_INT);
+  idt_register(24, (uint32_t)isr24, IDT_INT);
+  idt_register(25, (uint32_t)isr25, IDT_INT);
+  idt_register(26, (uint32_t)isr26, IDT_INT);
+  idt_register(27, (uint32_t)isr27, IDT_INT);
+  idt_register(28, (uint32_t)isr28, IDT_INT);
+  idt_register(29, (uint32_t)isr29, IDT_INT);
+  idt_register(30, (uint32_t)isr30, IDT_INT);
+  idt_register(31, (uint32_t)isr31, IDT_INT);
 
   // Configuring the PIC
   port_write8(PIC1_CMD, ICW1);
@@ -73,22 +76,24 @@ void isr_install() {
   port_write8(PIC2_DAT, 0x00);
 
   // IRQs
-  idt_register(32, (uint32_t)irq0);
-  idt_register(33, (uint32_t)irq1);
-  idt_register(34, (uint32_t)irq2);
-  idt_register(35, (uint32_t)irq3);
-  idt_register(36, (uint32_t)irq4);
-  idt_register(37, (uint32_t)irq5);
-  idt_register(38, (uint32_t)irq6);
-  idt_register(39, (uint32_t)irq7);
-  idt_register(40, (uint32_t)irq8);
-  idt_register(41, (uint32_t)irq9);
-  idt_register(42, (uint32_t)irq10);
-  idt_register(43, (uint32_t)irq11);
-  idt_register(44, (uint32_t)irq12);
-  idt_register(45, (uint32_t)irq13);
-  idt_register(46, (uint32_t)irq14);
-  idt_register(47, (uint32_t)irq15);
+  idt_register(32, (uint32_t)irq0, IDT_INT);
+  idt_register(33, (uint32_t)irq1, IDT_INT);
+  idt_register(34, (uint32_t)irq2, IDT_INT);
+  idt_register(35, (uint32_t)irq3, IDT_INT);
+  idt_register(36, (uint32_t)irq4, IDT_INT);
+  idt_register(37, (uint32_t)irq5, IDT_INT);
+  idt_register(38, (uint32_t)irq6, IDT_INT);
+  idt_register(39, (uint32_t)irq7, IDT_INT);
+  idt_register(40, (uint32_t)irq8, IDT_INT);
+  idt_register(41, (uint32_t)irq9, IDT_INT);
+  idt_register(42, (uint32_t)irq10, IDT_INT);
+  idt_register(43, (uint32_t)irq11, IDT_INT);
+  idt_register(44, (uint32_t)irq12, IDT_INT);
+  idt_register(45, (uint32_t)irq13, IDT_INT);
+  idt_register(46, (uint32_t)irq14, IDT_INT);
+  idt_register(47, (uint32_t)irq15, IDT_INT);
+
+  idt_clear(48, -1);
 
   // finish config
   idt_load();
@@ -101,45 +106,25 @@ const char* exception_msg[] = {
   "Reserved"
 };
 
-void print_uint32(uint32_t i) {
-  int32_t shift = 28;
-  while (shift >= 0) {
-    uint8_t hex = (i >> shift) & 0xF;
-    if (hex < 10) {
-      kput('0' + hex, -1, -1);
-    } else if (hex < 16) {
-      kput('A' - 10 + hex, -1, -1);
-    }
-    shift -= 4;
-  }
-}
-
 void isr_handler(isr_regs_t* regs) {
-  kprint("\nInterrupt:\nregs->int_no: ", -1, -1);
-  print_uint32(regs->int_no);
-
-  kprint("\nregs->err_no: ", -1, -1);
-  print_uint32(regs->err_no);
-
-  kprint("\nregs->eip: ", -1, -1);
-  print_uint32(regs->eip);
-
-  kprint("\nregs->cs: ", -1, -1);
-  print_uint32(regs->cs);
-
-  if (regs->int_no >= 32) {
-    pic_send_eoi(regs->int_no);
-    kprint("\nIRQ received\n", -1, -1);
-    return;
-  }
-
-
-  const char* msg = "Out of range for int number"; // default
+  const char* msg = "Unnamed"; // default
   if (regs->int_no < sizeof(exception_msg) / sizeof(exception_msg[0])) {
     msg = exception_msg[regs->int_no];
   }
+  
+  kprintf(
+    "Interrupt: %s\n"
+    "regs->int_no: %x\n"
+    "regs->err_no: %x\n"
+    "regs->eip: %x\n"
+    "regs->cs: %x\n",
+    msg, regs->int_no,
+    regs->err_no,regs->eip,
+    regs->cs
+  );
 
-  kprint("\nException: ", -1, -1);
-  kprint(msg, -1, -1);
-  kput('\n', -1, -1);
+  if (regs->int_no >= 32) {
+    pic_send_eoi(regs->int_no);
+    return;
+  }
 }
