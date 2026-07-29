@@ -28,13 +28,12 @@ void idt_register(int n, uint32_t handler) {
   idt[n].high_offset = high16(handler);
 }
 
-extern void load_idt(idt_ptr_t* ptr);
-
 void idt_load() {
   idt_ptr_t idt_ptr;
 
   idt_ptr.limit = sizeof(idt_gate_t) * IDT_SIZE - 1;
   idt_ptr.base = (uint32_t)idt;
 
-  load_idt(&idt_ptr);
+  asm volatile("lidt (%0)" :: "r"(&idt_ptr));
+  asm volatile("sti");
 }

@@ -9,7 +9,7 @@ void kmain() {
 
   isr_install();
 
-  while (1);
-
-  kprint("hlt", 0, 24);
+  while (1) {
+    asm volatile("hlt");
+  }
 }

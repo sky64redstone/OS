@@ -115,7 +115,7 @@ void print_uint32(uint32_t i) {
 }
 
 void isr_handler(isr_regs_t* regs) {
-  kprint("\nregs->int_no: ", -1, -1);
+  kprint("\nInterrupt:\nregs->int_no: ", -1, -1);
   print_uint32(regs->int_no);
 
   kprint("\nregs->err_no: ", -1, -1);
