@@ -3,8 +3,10 @@
 #include "drivers/ports.h"
 #include "drivers/vga/text.h"
 #include "kernel/kio.h"
+/* dispatch interrupt */
+#include "drivers/ps2/keyboard.h"
 
-// PIC Ports
+/* PIC Ports */
 #define PIC1_CMD 0x20
 #define PIC1_DAT 0x21
 #define PIC2_CMD 0xA0
@@ -25,7 +27,7 @@ void pic_send_eoi(uint32_t int_no) {
 }
 
 void isr_install() {
-  // ISRs
+  /* ISRs */
   idt_register( 0, (uint32_t)isr0, IDT_INT);
   idt_register( 1, (uint32_t)isr1, IDT_INT);
   idt_register( 2, (uint32_t)isr2, IDT_INT);
@@ -59,23 +61,23 @@ void isr_install() {
   idt_register(30, (uint32_t)isr30, IDT_INT);
   idt_register(31, (uint32_t)isr31, IDT_INT);
 
-  // Configuring the PIC
+  /* Configuring the PIC */
   port_write8(PIC1_CMD, ICW1);
   port_write8(PIC2_CMD, ICW1);
-  // ICW2: IDT offset
+  /* ICW2: IDT offset */
   port_write8(PIC1_DAT, 0x20);
   port_write8(PIC2_DAT, 0x28);
-  // ICW3: wiring between the PICs
+  /* ICW3: wiring between the PICs */
   port_write8(PIC1_DAT, 0x04);
   port_write8(PIC2_DAT, 0x02);
-  // ICW4: mode (we enable 8086 mode)
+  /* ICW4: mode (we enable 8086 mode) */
   port_write8(PIC1_DAT, 0x01);
   port_write8(PIC2_DAT, 0x01);
-  // OCW1: masking (we enable all IRQs)
+  /* OCW1: masking (we enable all IRQs) */
   port_write8(PIC1_DAT, 0x00);
   port_write8(PIC2_DAT, 0x00);
 
-  // IRQs
+  /* IRQs */
   idt_register(32, (uint32_t)irq0, IDT_INT);
   idt_register(33, (uint32_t)irq1, IDT_INT);
   idt_register(34, (uint32_t)irq2, IDT_INT);
@@ -95,19 +97,47 @@ void isr_install() {
 
   idt_clear(48, -1);
 
-  // finish config
+  /* finish config */
   idt_load();
 }
 
 const char* exception_msg[] = {
   "Division by zero",
   "Debug",
-
-  "Reserved"
+  "Non-maskable",
+  "Breakpoint",
+  "Overflow",
+  "Out of Bounds",
+  "Invalid Opcode",
+  "Device Not Available",
+  "Double Fault",
+  "Coprocessor Segment Overrun",
+  "Invalid TSS",
+  "Segment Not Present",
+  "Stack Fault",
+  "General Protection Fault",
+  "Page Fault",
+  "Reserved",
+  "Floating Point",
+  "Alignment Check",
+  "Machine Check",
+  "SIMD Floating Point",
+  "Virtualization",
+  "Control Protection"
 };
 
 void isr_handler(isr_regs_t* regs) {
-  const char* msg = "Unnamed"; // default
+  switch (regs->int_no) {
+    case 0x21: ps2_keyboard_interrupt(regs); break; /* keyboard */
+    default: break;
+  }
+
+  if (regs->int_no >= 32) {
+    pic_send_eoi(regs->int_no);
+    return;
+  }
+
+  const char* msg = "Reserved"; /* default */
   if (regs->int_no < sizeof(exception_msg) / sizeof(exception_msg[0])) {
     msg = exception_msg[regs->int_no];
   }
@@ -122,9 +152,4 @@ void isr_handler(isr_regs_t* regs) {
     regs->err_no,regs->eip,
     regs->cs
   );
-
-  if (regs->int_no >= 32) {
-    pic_send_eoi(regs->int_no);
-    return;
-  }
 }

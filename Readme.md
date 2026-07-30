@@ -12,7 +12,7 @@ Tools you need: <br>
 
 On arch linux:
 ```
-sudo pacman -S gcc binutils nasm qemu-desktop
+# pacman -S gcc binutils nasm qemu-desktop
 ```
 
 Build and run the project

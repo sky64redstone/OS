@@ -7,7 +7,7 @@ red=`tput setaf 9`
 
 asmfiles=cpu/interrupts.asm
 cfiles=	kernel/kernel.c kernel/kio.c \
-		drivers/ports.c drivers/vga/text.c \
+		drivers/ports.c drivers/vga/text.c drivers/ps2/keyboard.c \
 		cpu/idt.c cpu/isr.c
 
 cflags=-m32 -ffreestanding -nostdlib -fno-pic -fno-stack-protector -I.
