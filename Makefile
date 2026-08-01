@@ -27,18 +27,18 @@ build: build/image.bin
 	@echo -e $(green)Built for x86_64 hardware$(reset)
 
 dis: build/image.bin
-	@echo -e [txt]  $(yellow)Disassembling kernel.elf in build/kernel.dis$(reset)...
-	@objdump -d build/kernel.elf > build/kernel.dis
-	@echo -e [txt]  $(yellow)Disassembling the image in build/image.dis$(reset)...
+	@echo -e [txt] $(yellow)Disassembling kernel.elf in build/kernel.dis$(reset)...
+	@objdump -M intel -d build/kernel.elf > build/kernel.dis
+	@echo -e [txt] $(yellow)Disassembling the image in build/image.dis$(reset)...
 	@ndisasm -b 32 $< > build/image.dis
 
 clean:
 	@rm -rf build/
 
 build/image.bin: build/boot/src/bootloader.bin build/kernel.bin
-	@echo -e [bin]   $(red)Combining the kernel and bootloader$(reset)...
+	@echo -e [bin] $(red)Combining the kernel and bootloader$(reset)...
 	@cat $^ > $@
-	@dd if=/dev/zero bs=1 count=5k >> $@ 2>/dev/null
+	@dd if=/dev/zero bs=512 count=1 >> $@ 2>/dev/null
 
 build/kernel.bin: build/boot/src/kernel-entry.asm.o ${ofiles}
 	@echo -e [elf] $(purple)Linking the kernel$(reset)...

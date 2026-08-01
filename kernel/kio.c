@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-#define MAX_BUFFER 16
+#define MAX_BUFFER 64
 
 outstream_t stdout;
 

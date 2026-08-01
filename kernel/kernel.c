@@ -3,14 +3,6 @@
 #include "version.h"
 #include "kio.h"
 
-void vga_kput(char c) {
-  vga_put(c, -1, -1);
-}
-
-void vga_kprint(const char* str) {
-  vga_print(str, -1, -1);
-}
-
 void kmain() {
   vga_clear_screen();
 

@@ -123,3 +123,12 @@ void vga_clear_screen() {
   }
   _set_cursor_offset(0);
 }
+
+void vga_kput(char c) {
+  vga_put(c, -1, -1);
+}
+
+void vga_kprint(const char* str) {
+  vga_print(str, -1, -1);
+}
+
