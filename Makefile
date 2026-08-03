@@ -5,6 +5,14 @@ blue=`tput setaf 4`
 purple=`tput setaf 5`
 red=`tput setaf 9`
 
+CC = gcc
+AS = nasm
+LD = ld
+OBJCOPY = objcopy
+GDB = gdb
+QEMU = qemu-system-i386
+PRE = @
+
 asmfiles=cpu/interrupts.asm
 cfiles=	kernel/kernel.c kernel/kio.c kernel/irq.c kernel/init.c kernel/device.c \
 		drivers/ports.c drivers/vga/text.c drivers/ps2/keyboard.c drivers/ps2/ps2.c \
@@ -12,53 +20,77 @@ cfiles=	kernel/kernel.c kernel/kio.c kernel/irq.c kernel/init.c kernel/device.c 
 
 cflags=-m32 -ffreestanding -nostdlib -fno-pic \
 	-fno-stack-protector -Wall -Wextra -Werror \
-	-Wstrict-prototypes -I.
+	-fno-asynchronous-unwind-tables -fno-unwind-tables \
+	-Wstrict-prototypes -g -O0 -fno-pie -I.
 ldflags=-m elf_i386 -T linker.ld -nostdlib
+
+qemu_flags = \
+	-drive format=raw,file=build/image.bin \
+	-no-reboot \
+	-no-shutdown
+
+qemu_debug_flags = \
+	$(qemu_flags) \
+	-S \
+	-gdb tcp::1234 \
+	-d int,cpu_reset,guest_errors \
+	-D build/qemu.log
+
+.PHONY: build run debug debug-qemu clean
 
 ofiles=$(patsubst %.asm,build/%.asm.o,$(asmfiles)) $(patsubst %.c,build/%.c.o,$(cfiles))
 
 run: build/image.bin
-	@echo -e $(green)Running on x86_64 hardware$(reset)...
-	@qemu-system-x86_64 -no-reboot -drive format=raw,file=$<
+	@echo -e $(green)Running$(reset) on i386 architecture...
+	$(PRE)$(QEMU) $(qemu_flags)
 
-debug: build/image.bin
-	@echo -e $(green)Debugging on x86_64 hardware$(reset)...
-	@qemu-system-x86_64 -monitor stdio -drive format=raw,file=$<
+debug: build/image.bin build/kernel.elf
+	@echo -e $(green)Debugging$(reset) on i386 architecture...
+	$(PRE)$(QEMU) $(qemu_debug_flags) &
+	$(PRE)$(GDB) \
+		-ex "set architecture i386" \
+		-ex "target remote localhost:1234" \
+		-ex "symbol-file build/kernel.elf" \
+		-ex "continue" \
+		#-ex "break kmain"
 
 build: build/image.bin
-	@echo -e $(green)Built for x86_64 hardware$(reset)
+	@echo -e $(green)Built$(reset) for i386/x86 hardware
 
 dis: build/image.bin
 	@echo -e [txt] $(yellow)Disassembling kernel.elf in build/kernel.dis$(reset)...
-	@objdump -M intel -d build/kernel.elf > build/kernel.dis
+	$(PRE)objdump -M intel -d build/kernel.elf > build/kernel.dis
 	@echo -e [txt] $(yellow)Disassembling the image in build/image.dis$(reset)...
-	@ndisasm -b 32 $< > build/image.dis
+	$(PRE)ndisasm -b 32 $< > build/image.dis
 
 clean:
-	@rm -rf build/
+	$(PRE)rm -rf build/
 
 build/image.bin: build/boot/src/bootloader.bin build/kernel.bin
 	@echo -e [bin] $(red)Combining the kernel and bootloader$(reset)...
-	@cat $^ > $@
-	@dd if=/dev/zero bs=512 count=1 >> $@ 2>/dev/null
+	$(PRE)cat $^ > $@
+	@size=$$(stat -c '%s' $@); \
+	sectors=$$(((size + 511) / 512)); \
+	echo "Kernel size: $$size bytes ($$sectors sectors)"
+	$(PRE)dd if=/dev/zero bs=512 count=1 >> $@ 2>/dev/null
 
 build/kernel.bin: build/boot/src/kernel-entry.asm.o ${ofiles}
 	@echo -e [elf] $(purple)Linking the kernel$(reset)...
-	@ld ${ldflags} $^ -o build/kernel.elf
+	$(PRE)ld ${ldflags} $^ -o build/kernel.elf
 	@echo -e [bin] $(purple)Stripping ELF metadata$(reset)...
-	@objcopy -O binary build/kernel.elf $@
+	$(PRE)objcopy -O binary build/kernel.elf $@
 
 build/%.c.o: %.c
-	@mkdir -p $(dir $@)
+	$(PRE)mkdir -p $(dir $@)
 	@echo -e [elf] $(blue)Compiling$(reset) $<...
-	@gcc ${cflags} -c $< -o $@
+	$(PRE)gcc ${cflags} -c $< -o $@
 
 build/%.asm.o: %.asm
-	@mkdir -p $(dir $@)
+	$(PRE)mkdir -p $(dir $@)
 	@echo -e [elf] $(yellow)Assembling$(reset) $<...
-	@nasm $< -f elf32 -o $@
+	$(PRE)nasm $< -f elf32 -o $@
 
 build/%.bin: %.asm
-	@mkdir -p $(dir $@)
+	$(PRE)mkdir -p $(dir $@)
 	@echo -e [bin] $(yellow)Assembling$(reset) $<...
-	@nasm $< -f bin -o $@
+	$(PRE)nasm $< -f bin -o $@
