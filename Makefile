@@ -7,6 +7,7 @@ red=`tput setaf 9`
 
 CC = gcc
 AS = nasm
+DAS = ndisasm
 LD = ld
 OBJCOPY = objcopy
 GDB = gdb
@@ -59,38 +60,38 @@ build: build/image.bin
 
 dis: build/image.bin
 	@echo -e [txt] $(yellow)Disassembling kernel.elf in build/kernel.dis$(reset)...
-	$(PRE)objdump -M intel -d build/kernel.elf > build/kernel.dis
+	$(PRE)$(OBJDUMP) -M intel -d build/kernel.elf > build/kernel.dis
 	@echo -e [txt] $(yellow)Disassembling the image in build/image.dis$(reset)...
-	$(PRE)ndisasm -b 32 $< > build/image.dis
+	$(PRE)$(DAS) -b 32 $< > build/image.dis
 
 clean:
 	$(PRE)rm -rf build/
 
-build/image.bin: build/boot/src/bootloader.bin build/kernel.bin
+build/image.bin: build/boot/src/bootloader.asm.bin build/kernel.bin
 	@echo -e [bin] $(red)Combining the kernel and bootloader$(reset)...
 	$(PRE)cat $^ > $@
 	@size=$$(stat -c '%s' $@); \
 	sectors=$$(((size + 511) / 512)); \
-	echo "Kernel size: $$size bytes ($$sectors sectors)"
+	echo -e "$(purple)Image size$(reset): $$size bytes ($$sectors sectors)"
 	$(PRE)dd if=/dev/zero bs=512 count=1 >> $@ 2>/dev/null
 
 build/kernel.bin: build/boot/src/kernel-entry.asm.o ${ofiles}
 	@echo -e [elf] $(purple)Linking the kernel$(reset)...
-	$(PRE)ld ${ldflags} $^ -o build/kernel.elf
+	$(PRE)$(LD) ${ldflags} $^ -o build/kernel.elf
 	@echo -e [bin] $(purple)Stripping ELF metadata$(reset)...
-	$(PRE)objcopy -O binary build/kernel.elf $@
+	$(PRE)$(OBJCOPY) -O binary build/kernel.elf $@
 
 build/%.c.o: %.c
 	$(PRE)mkdir -p $(dir $@)
 	@echo -e [elf] $(blue)Compiling$(reset) $<...
-	$(PRE)gcc ${cflags} -c $< -o $@
+	$(PRE)$(CC) ${cflags} -c $< -o $@
 
 build/%.asm.o: %.asm
 	$(PRE)mkdir -p $(dir $@)
 	@echo -e [elf] $(yellow)Assembling$(reset) $<...
-	$(PRE)nasm $< -f elf32 -o $@
+	$(PRE)$(AS) $< -f elf32 -o $@
 
-build/%.bin: %.asm
+build/%.asm.bin: %.asm
 	$(PRE)mkdir -p $(dir $@)
 	@echo -e [bin] $(yellow)Assembling$(reset) $<...
-	$(PRE)nasm $< -f bin -o $@
+	$(PRE)$(AS) $< -f bin -o $@

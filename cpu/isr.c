@@ -104,13 +104,17 @@ void isr_handler(isr_regs_t* regs) {
   
   kprintf(
     "Interrupt: %s\n"
-    "regs->int_no: %x\n"
-    "regs->err_no: %x\n"
-    "regs->eip: %x\n"
-    "regs->cs: %x\n",
-    msg, regs->int_no,
-    regs->err_no,regs->eip,
-    regs->cs
+    "ds:  0x%x\n"
+    "edi: 0x%x, esi: 0x%x, ebp: 0x%x, esp: 0x%x\n"
+    "ebx: 0x%x, edx: 0x%x, ecx: 0x%x, eax: 0x%x\n"
+    "int: 0x%x, err: 0x%x, eip: 0x%x,  cs: 0x%x\n"
+    "eflags: 0x%x, useresp: 0x%x, ss: 0x%x\n",
+    msg,
+    regs->ds,
+    regs->edi, regs->esi, regs->ebp, regs->esp,
+    regs->ebx, regs->edx, regs->ecx, regs->eax,
+    regs->int_no, regs->err_no,
+    regs->eip, regs->cs, regs->eflags, regs->useresp, regs->ss
   );
 
   while (1) {
