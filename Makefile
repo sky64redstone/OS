@@ -6,11 +6,13 @@ purple=`tput setaf 5`
 red=`tput setaf 9`
 
 asmfiles=cpu/interrupts.asm
-cfiles=	kernel/kernel.c kernel/kio.c \
-		drivers/ports.c drivers/vga/text.c drivers/ps2/keyboard.c \
-		cpu/idt.c cpu/isr.c
+cfiles=	kernel/kernel.c kernel/kio.c kernel/irq.c kernel/init.c kernel/device.c \
+		drivers/ports.c drivers/vga/text.c drivers/ps2/keyboard.c drivers/ps2/ps2.c \
+		cpu/idt.c cpu/isr.c cpu/pic.c
 
-cflags=-m32 -ffreestanding -nostdlib -fno-pic -fno-stack-protector -I.
+cflags=-m32 -ffreestanding -nostdlib -fno-pic \
+	-fno-stack-protector -Wall -Wextra -Werror \
+	-Wstrict-prototypes -I.
 ldflags=-m elf_i386 -T linker.ld -nostdlib
 
 ofiles=$(patsubst %.asm,build/%.asm.o,$(asmfiles)) $(patsubst %.c,build/%.c.o,$(cfiles))

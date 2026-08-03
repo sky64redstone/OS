@@ -29,4 +29,10 @@ SECTIONS {
         *(.bss)
         *(COMMON)
     } :data
+
+    .builtin_drivers ALIGN(4) : {
+        __builtin_drivers_start = .;
+        KEEP(*(.builtin_drivers))
+        __builtin_drivers_end = .;
+    }
 }

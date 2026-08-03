@@ -3,28 +3,9 @@
 #include "drivers/ports.h"
 #include "drivers/vga/text.h"
 #include "kernel/kio.h"
-/* dispatch interrupt */
-#include "drivers/ps2/keyboard.h"
-
-/* PIC Ports */
-#define PIC1_CMD 0x20
-#define PIC1_DAT 0x21
-#define PIC2_CMD 0xA0
-#define PIC2_DAT 0xA1
-
-#define PIC_EOI 0x20
-#define ICW1 0x11
+#include "kernel/irq.h"
 
 #define IDT_INT 0x8E
-
-void pic_send_eoi(uint32_t int_no) {
-  if (int_no >= 40) {
-    port_write8(PIC2_CMD, PIC_EOI);
-  }
-  if (int_no >= 32) {
-    port_write8(PIC1_CMD, PIC_EOI);
-  }
-}
 
 void isr_install() {
   /* ISRs */
@@ -60,22 +41,6 @@ void isr_install() {
   idt_register(29, (uint32_t)isr29, IDT_INT);
   idt_register(30, (uint32_t)isr30, IDT_INT);
   idt_register(31, (uint32_t)isr31, IDT_INT);
-
-  /* Configuring the PIC */
-  port_write8(PIC1_CMD, ICW1);
-  port_write8(PIC2_CMD, ICW1);
-  /* ICW2: IDT offset */
-  port_write8(PIC1_DAT, 0x20);
-  port_write8(PIC2_DAT, 0x28);
-  /* ICW3: wiring between the PICs */
-  port_write8(PIC1_DAT, 0x04);
-  port_write8(PIC2_DAT, 0x02);
-  /* ICW4: mode (we enable 8086 mode) */
-  port_write8(PIC1_DAT, 0x01);
-  port_write8(PIC2_DAT, 0x01);
-  /* OCW1: masking (we enable all IRQs) */
-  port_write8(PIC1_DAT, 0x00);
-  port_write8(PIC2_DAT, 0x00);
 
   /* IRQs */
   idt_register(32, (uint32_t)irq0, IDT_INT);
@@ -127,13 +92,8 @@ const char* exception_msg[] = {
 };
 
 void isr_handler(isr_regs_t* regs) {
-  switch (regs->int_no) {
-    case 0x21: ps2_keyboard_interrupt(regs); break; /* keyboard */
-    default: break;
-  }
-
-  if (regs->int_no >= 32) {
-    pic_send_eoi(regs->int_no);
+  if (regs->int_no >= 32 && regs->int_no < 48) {
+    irq_dispatch(regs->int_no - 32, regs);
     return;
   }
 
@@ -152,4 +112,8 @@ void isr_handler(isr_regs_t* regs) {
     regs->err_no,regs->eip,
     regs->cs
   );
+
+  while (1) {
+    asm volatile("cli; hlt");
+  }
 }

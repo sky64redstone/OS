@@ -1,5 +1,5 @@
 # OS
-A learning by doing Operating System for x84_64 computers. Written in C and assembly (Intel Syntax)
+An Operating System for x84 architectures. Written in C and assembly (Intel Syntax)
 
 ## Compiling
 This project uses Makefiles with gcc, binutils and nasm to compile.<br>

@@ -1,3 +1,4 @@
 [submodule "boot"]
 	path = boot
-	url = https://github.com/sky64redstone/boot.git
+  url = https://github.com/sky64redstone/boot.git
+
