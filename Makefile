@@ -10,6 +10,7 @@ AS = nasm
 DAS = ndisasm
 LD = ld
 OBJCOPY = objcopy
+OBJDUMP = objdump
 GDB = gdb
 QEMU = qemu-system-i386
 PRE = @
@@ -50,10 +51,8 @@ debug: build/image.bin build/kernel.elf
 	$(PRE)$(QEMU) $(qemu_debug_flags) &
 	$(PRE)$(GDB) \
 		-ex "set architecture i386" \
-		-ex "target remote localhost:1234" \
 		-ex "symbol-file build/kernel.elf" \
-		-ex "continue" \
-		#-ex "break kmain"
+		-ex "target remote localhost:1234"
 
 build: build/image.bin
 	@echo -e $(green)Built$(reset) for i386/x86 hardware
@@ -73,6 +72,8 @@ build/image.bin: build/boot/src/bootloader.asm.bin build/kernel.bin
 	@size=$$(stat -c '%s' $@); \
 	sectors=$$(((size + 511) / 512)); \
 	echo -e "$(purple)Image size$(reset): $$size bytes ($$sectors sectors)"
+	@echo -e [$(yellow)WARN$(reset)] $(red)DON\'T FORGET TO LOAD ALL SECTORS$(reset)
+	@echo -e See boot/src/bootloader.asm line ~29 set dh to sector count
 	$(PRE)dd if=/dev/zero bs=512 count=1 >> $@ 2>/dev/null
 
 build/kernel.bin: build/boot/src/kernel-entry.asm.o ${ofiles}

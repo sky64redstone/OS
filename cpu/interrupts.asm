@@ -30,7 +30,9 @@ isr_common:
   popa
   add esp, 8 ; remove int_no and err_no
 
-  ; pops cs, eip, eflags, ss, and esp
+  ; pops cs, eip, eflags
+  ; pops ESP and SS only when returning to a numerically higher privilege level
+  ; such as ring 0 to ring 3
   iret
 
 %macro ISR_NORMAL 1
@@ -72,7 +74,7 @@ ISR_ERROR  17 ; 17: Alignment Check Exception
 ISR_NORMAL 18 ; 18: Machine Check Exception
 ISR_NORMAL 19 ; 19: SIMD Floating Point Exception
 ISR_NORMAL 20 ; 20: Virtualization Exception
-ISR_NORMAL 21 ; 21: Control Protection Exception
+ISR_ERROR  21 ; 21: Control Protection Exception
 ISR_NORMAL 22 ; 22: Reserved
 ISR_NORMAL 23 ; 23: Reserved
 ISR_NORMAL 24 ; 24: Reserved

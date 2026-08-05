@@ -14,7 +14,8 @@ void kmain() {
   stdout.put = vga_kput;
   stdout.print = vga_kprint;
   vga_clear_screen();
-  kprint(str_welcome);
+  //kprint(str_welcome);
+  vga_print(str_welcome,-1,-1);
 
   /*
    * Install exception and hardware IRQ gates, but do not globally enable

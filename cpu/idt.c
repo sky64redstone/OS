@@ -50,5 +50,4 @@ void idt_load() {
   idt_ptr.base = (uint32_t)idt;
 
   asm volatile("lidt (%0)" :: "r"(&idt_ptr));
-  asm volatile("sti");
 }
