@@ -1,5 +1,7 @@
 # OS
-An Operating System for x84 architectures. Written in C and assembly (Intel Syntax)
+An Operating System for x86 architectures. Written in C and assembly (Intel Syntax)
+
+![screenshot of the OS running](https://github.com/sky64redstone/OS/blob/master/screenshot.png?raw=true)
 
 ## Compiling
 This project uses Makefiles with gcc, binutils and nasm to compile.<br>
