@@ -1,6 +1,5 @@
 #include <stdint.h>
 
-#include "keyboard.h"
 #include "drivers/ports.h"
 #include "kernel/device.h"
 #include "kernel/initcall.h"
