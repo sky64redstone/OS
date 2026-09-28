@@ -1,0 +1,12 @@
+{
+  "build": {
+    "directory": ".",
+    "targets": [
+      {
+        "name": "Make",
+        "build_cmd": "make build",
+        "run_cmd": "make run"
+      }
+    ]
+  }
+}

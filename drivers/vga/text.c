@@ -6,7 +6,8 @@
 #define SCREEN_H 25
 #define REG_SCREEN_CTRL 0x3D4
 #define REG_SCREEN_DATA 0x3D5
-#define DEFAULT_COLOR 0x0F
+
+static char current_color = VGA_DEFAULT_COLOR;
 
 int _get_screen_offset(int x, int y) {
   return y * SCREEN_W + x;
@@ -54,7 +55,7 @@ int _handle_scrolling(int offset) {
 
     for (int i = max; i < mem_max; i += 2) {
       SCREEN_MEM[i] = ' ';
-      SCREEN_MEM[i + 1] = DEFAULT_COLOR;
+      SCREEN_MEM[i + 1] = current_color;
     }
   
     offset = _get_screen_offset(0, SCREEN_H - 1);
@@ -68,6 +69,8 @@ int _handle_scrolling(int offset) {
 int _vga_put(char c, int offset) {
   if (offset < 0) {
     offset = _get_cursor_offset();
+  } else if (offset >= SCREEN_W * SCREEN_H) {
+    offset = _handle_scrolling(offset);
   }
 
   if (c == '\n') {
@@ -75,7 +78,7 @@ int _vga_put(char c, int offset) {
   } else {
     int off = offset * 2;
     SCREEN_MEM[off] = c;
-    SCREEN_MEM[off + 1] = DEFAULT_COLOR;
+    SCREEN_MEM[off + 1] = current_color;
     offset++;
   }
 
@@ -119,9 +122,26 @@ void vga_clear_screen() {
   const int max_cells = SCREEN_W * SCREEN_H * 2;
   for (int offset = 0; offset < max_cells; offset += 2) {
     SCREEN_MEM[offset] = ' ';
-    SCREEN_MEM[offset + 1] = DEFAULT_COLOR;
+    SCREEN_MEM[offset + 1] = current_color;
   }
   _set_cursor_offset(0);
+}
+
+void vga_set_cursor(int x, int y) {
+  if (x < 0 || x >= SCREEN_W || y < 0 || y >= SCREEN_H) {
+    return;
+  }
+  _set_cursor_offset(_get_screen_offset(x, y));
+}
+
+void vga_get_cursor(int* x, int* y) {
+  int offset = _get_cursor_offset();
+  if (x != 0) *x = _get_screen_x(offset);
+  if (y != 0) *y = _get_screen_y(offset);
+}
+
+void vga_set_color(char color) {
+  current_color = color;
 }
 
 void vga_kput(char c) {

@@ -8,6 +8,7 @@ ENTRY(kmain)        /* entry point */
 PHDRS {
   text PT_LOAD FLAGS(5); /* R-X */
   data PT_LOAD FLAGS(6); /* RW- */
+  rodata PT_LOAD FLAGS(4); /* R-- */
 }
 
 SECTIONS {
@@ -19,7 +20,7 @@ SECTIONS {
 
     .rodata : {
         *(.rodata*)
-    } :text
+    } :rodata
 
     .data : {
         *(.data)
@@ -34,5 +35,5 @@ SECTIONS {
         __builtin_drivers_start = .;
         KEEP(*(.builtin_drivers))
         __builtin_drivers_end = .;
-    }
+    } :rodata
 }
