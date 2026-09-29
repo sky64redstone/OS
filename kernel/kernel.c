@@ -2,11 +2,13 @@
 #include "cpu/pic.h"
 
 #include "drivers/ps2/ps2.h"
+#include "drivers/ps2/keyboard.h"
 #include "drivers/vga/text.h"
 
 #include "kernel/device.h"
 #include "kernel/initcall.h"
 #include "kernel/kio.h"
+#include "kernel/shell.h"
 
 #include "version.h"
 
@@ -45,9 +47,33 @@ void kmain() {
    */
   ps2_bus_init();
 
+  /*
+   * Initialize the kernel shell and print the first prompt.
+   */
+  shell_init();
+
   asm volatile("sti");
 
   while (1) {
-    asm volatile("hlt");
+    char character;
+
+    /*
+     * Prevent an interrupt from arriving between the empty-queue
+     * check and hlt.
+     */
+    asm volatile("cli" : : : "memory");
+
+    if (ps2_keyboard_read(&character)) {
+      asm volatile("sti" : : : "memory");
+
+      shell_input(character);
+      continue;
+    }
+
+    /*
+     * STI followed immediately by HLT closes the sleep race:
+     * an IRQ arriving before HLT will wake the CPU.
+     */
+    asm volatile("sti; hlt" : : : "memory");
   }
 }

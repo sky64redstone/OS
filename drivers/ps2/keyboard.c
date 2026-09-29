@@ -5,6 +5,47 @@
 #include "kernel/initcall.h"
 #include "kernel/irq.h"
 #include "kernel/kio.h"
+#include "keyboard.h"
+
+#define KEYBOARD_BUFFER_SIZE 128
+
+static volatile char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
+static volatile uint8_t keyboard_buffer_head;
+static volatile uint8_t keyboard_buffer_tail;
+
+static void ps2_keyboard_queue_char(char character) {
+  uint8_t next = (uint8_t)(
+    (keyboard_buffer_head + 1) & (KEYBOARD_BUFFER_SIZE - 1)
+  );
+
+  if (next == keyboard_buffer_tail) {
+    return;
+  }
+
+  keyboard_buffer[keyboard_buffer_head] = character;
+  keyboard_buffer_head = next;
+}
+
+int ps2_keyboard_read(char* character) {
+  uint8_t tail;
+
+  if (character == 0) {
+    return 0;
+  }
+
+  tail = keyboard_buffer_tail;
+
+  if (tail == keyboard_buffer_head) {
+    return 0;
+  }
+
+  *character = keyboard_buffer[tail];
+  keyboard_buffer_tail = (uint8_t)(
+    (tail + 1) & (KEYBOARD_BUFFER_SIZE - 1)
+  );
+
+  return 1;
+}
 
 /*
  * TODO: move key codes into seperate file
@@ -91,12 +132,12 @@ struct ps2_keyboard {
   struct keyboard_state state;
 };
 
-uint8_t is_alpha(uint32_t code) {
+static uint8_t is_alpha(uint32_t code) {
   return ('a' <= code && 'z' >= code) ||
          code == 0xE4 || code == 0xF6 || code == 0xFC; /* ae, oe, ue umlaut */
 }
 
-uint32_t ps2_keyboard_mapped_value(struct ps2_keyboard* kb, uint8_t scancode) {
+static uint32_t ps2_keyboard_mapped_value(struct ps2_keyboard* kb, uint8_t scancode) {
   const struct key_mapping* mapping = &keymap_de[scancode];
   const uint8_t shift = kb->state.left_shift ||
                         kb->state.right_shift;
@@ -123,7 +164,7 @@ uint32_t ps2_keyboard_mapped_value(struct ps2_keyboard* kb, uint8_t scancode) {
   return mapping->normal;
 }
 
-void ps2_keyboard_update_modifiers(
+static void ps2_keyboard_update_modifiers(
   struct ps2_keyboard* kb, uint32_t scancode, uint8_t pressed
 ) {
   switch (scancode) {
@@ -141,7 +182,7 @@ void ps2_keyboard_update_modifiers(
   }
 }
 
-void ps2_keyboard_process_scan_code(struct ps2_keyboard* kb, uint8_t scancode) {
+static void ps2_keyboard_process_scan_code(struct ps2_keyboard* kb, uint8_t scancode) {
   if (scancode == 0xE0) {
     kb->state.extended = 1;
     return;
@@ -180,12 +221,33 @@ void ps2_keyboard_process_scan_code(struct ps2_keyboard* kb, uint8_t scancode) {
   }
 
   /* event key pressed */
-  if (!(key & ~0xFF)) {
-    kput(key & 0xFF);
+  switch (key) {
+    case KEY_ENTER:
+    case KEY_KEYPAD_ENTER:
+      ps2_keyboard_queue_char('\n');
+      break;
+
+    case KEY_BACKSPACE:
+      ps2_keyboard_queue_char('\b');
+      break;
+
+    case KEY_TAB:
+      ps2_keyboard_queue_char('\t');
+      break;
+
+    case KEY_ESCAPE:
+      ps2_keyboard_queue_char('\x1B');
+      break;
+
+    default:
+      if (!(key & ~0xFF)) {
+        ps2_keyboard_queue_char((char)key);
+      }
+      break;
   }
 }
 
-enum irq_result ps2_keyboard_irq(
+static enum irq_result ps2_keyboard_irq(
   uint32_t irq, void* dev_id, isr_regs_t* regs
 ) {
   struct ps2_keyboard* keyboard = dev_id;
@@ -221,9 +283,9 @@ enum irq_result ps2_keyboard_irq(
 }
 
 /* TODO temporary global object, because we don't have malloc yet */
-struct ps2_keyboard keyboard_instance;
+static struct ps2_keyboard keyboard_instance;
 
-int ps2_keyboard_probe(struct device* device) {
+static int ps2_keyboard_probe(struct device* device) {
   struct resource* data_resource = 
     device_get_resource(device, RESOURCE_IO, 0);
   struct resource* command_resource = 
@@ -280,7 +342,7 @@ int ps2_keyboard_probe(struct device* device) {
   return 0;
 }
 
-void ps2_keyboard_remove(struct device* device) {
+static void ps2_keyboard_remove(struct device* device) {
   struct ps2_keyboard* keyboard = device_get_data(device);
 
   if (keyboard == 0) {
@@ -291,12 +353,12 @@ void ps2_keyboard_remove(struct device* device) {
   device_set_data(device, 0);
 }
 
-const char* const ps2_keyboard_compatible[] = {
+static const char* const ps2_keyboard_compatible[] = {
   "pc,ps2-keyboard",
   0
 };
 
-struct device_driver ps2_keyboard_driver = {
+static struct device_driver ps2_keyboard_driver = {
   .name = "ps2-keyboard",
   .compatible_table = ps2_keyboard_compatible,
   .probe = ps2_keyboard_probe,

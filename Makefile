@@ -17,6 +17,7 @@ PRE = @
 
 asmfiles=cpu/interrupts.asm
 cfiles=	kernel/kernel.c kernel/kio.c kernel/irq.c kernel/init.c kernel/device.c \
+		kernel/shell.c \
 		drivers/ports.c drivers/vga/text.c drivers/ps2/keyboard.c drivers/ps2/ps2.c \
 		cpu/idt.c cpu/isr.c cpu/pic.c
 
@@ -72,7 +73,6 @@ build/image.bin: build/boot/src/bootloader.asm.bin build/kernel.bin
 	@size=$$(stat -c '%s' $@); \
 	sectors=$$(((size + 511) / 512)); \
 	echo -e "$(purple)Image size$(reset): $$size bytes ($$sectors sectors)"
-	@echo -e [$(yellow)WARN$(reset)] $(red)DON\'T FORGET TO LOAD ALL SECTORS$(reset)
 	@echo -e See boot/src/bootloader.asm line ~29 set dh to sector count
 	$(PRE)dd if=/dev/zero bs=512 count=1 >> $@ 2>/dev/null
 

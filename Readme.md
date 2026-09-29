@@ -32,14 +32,17 @@ $ make dis
 
 ## Components
 ### Bootloader
-The bootloader is located in the boot/ git submodule.
+The bootloader is located in the `boot/` git submodule.
 
 ### Kernel
-The kernel is located in the kernel/ directory.<br>
+The kernel is located in the `kernel/` directory.<br>
 kmain() is the kernel entry and is implemented in the file kernel/kernel.c
 
+### CPU
+Cpu architecture specific code is located in `cpu/`
+
 ### Drivers
-The drivers are located in the drivers/ directory.<br>
+The drivers are located in the `drivers/` directory.<br>
 
 ## Troubleshooting
 ### The kernel has unexpected problems / The BIOS restarts always

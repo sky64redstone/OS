@@ -75,6 +75,13 @@ int _vga_put(char c, int offset) {
 
   if (c == '\n') {
     offset = _get_screen_offset(0, _get_screen_y(offset) + 1);
+  } else if (c == '\b') {
+    if (offset > 0) {
+      offset--;
+      int off = offset * 2;
+      SCREEN_MEM[off] = ' ';
+      SCREEN_MEM[off + 1] = VGA_DEFAULT_COLOR;
+    }
   } else {
     int off = offset * 2;
     SCREEN_MEM[off] = c;
