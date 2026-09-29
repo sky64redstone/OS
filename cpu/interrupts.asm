@@ -23,10 +23,10 @@ isr_common:
 
   ; restore original segment pointers
   pop eax
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
   popa
   add esp, 8 ; remove int_no and err_no
 

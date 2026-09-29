@@ -10,11 +10,14 @@ Tools you need: <br>
 - `ld`
 - `nasm`
 - `objcopy`
-- `qemu-system-x86_64`
+- `qemu-system-i386`
+- `grub-file`
+- `xorriso`
+- `mformat`
 
 On arch linux:
 ```
-# pacman -S gcc binutils nasm qemu-desktop
+# pacman -S gcc binutils nasm qemu-desktop grub xorriso mtools
 ```
 
 Build and run the project
@@ -43,21 +46,3 @@ Cpu architecture specific code is located in `cpu/`
 
 ### Drivers
 The drivers are located in the `drivers/` directory.<br>
-
-## Troubleshooting
-### The kernel has unexpected problems / The BIOS restarts always
-The kernel may not have been loaded fully. Try increasing the number of loaded
-sectors in the boot/src/bootloader.asm file.
-It is recommended to set the register dh to x, with: `x * 512 = sizeof(kernel.bin)`
-```nasm
-  mov si, init_msg
-  call print
-
-  ; HERE: (~line 30)
-  mov dh, 3             ; load dh sectors
-  mov dl, [BOOT_DRIVE]  ; select our boot drive
-  mov bx, 0             ; set es indirectly to 0
-  mov es, bx
-  mov bx, KERNEL_OFFSET ; load it at address KERNEL_OFFSET
-  call disk_load
-```

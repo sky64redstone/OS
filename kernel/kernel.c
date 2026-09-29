@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "cpu/isr.h"
 #include "cpu/pic.h"
 
@@ -12,12 +14,23 @@
 
 #include "version.h"
 
-void kmain() {
+#define MULTIBOOT_BOOTLOADER_MAGIC 0x2BADB002
+
+void kmain(uint32_t multiboot_magic, uint32_t multiboot_info) {
+  (void)multiboot_info;
+
   stdout.put = vga_kput;
   stdout.print = vga_kprint;
+
+  if (multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC) {
+    kprintf("\nInvalid multiboot magic number (0x%x)\n", multiboot_magic);
+    while (1) {
+      asm volatile("cli; hlt");
+    }
+  }
+
   vga_clear_screen();
-  //kprint(str_welcome);
-  vga_print(str_welcome,-1,-1);
+  kprint(str_welcome);
 
   /*
    * Install exception and hardware IRQ gates, but do not globally enable

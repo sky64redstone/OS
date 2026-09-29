@@ -1,5 +1,5 @@
 OUTPUT_FORMAT(elf32-i386)
-ENTRY(kmain)        /* entry point */
+ENTRY(_start)        /* entry point */
 
 /* eliminate warning:
  * "/usr/bin/ld: warning: build/kernel.elf has a LOAD segment
@@ -12,15 +12,29 @@ PHDRS {
 }
 
 SECTIONS {
-    . = 0x1000;       /* load address, same as in src/bootloader.asm*/
+    . = 0x100000;
+
+    .multiboot ALIGN(4) : {
+      KEEP(*(.multiboot))
+    } :text
 
     .text : {
         *(.text)
     } :text
 
+    . = ALIGN(4K);
+
     .rodata : {
         *(.rodata*)
     } :rodata
+
+    .builtin_drivers ALIGN(4) : {
+        __builtin_drivers_start = .;
+        KEEP(*(.builtin_drivers))
+        __builtin_drivers_end = .;
+    } :rodata
+
+    . = ALIGN(4K);
 
     .data : {
         *(.data)
@@ -30,10 +44,4 @@ SECTIONS {
         *(.bss)
         *(COMMON)
     } :data
-
-    .builtin_drivers ALIGN(4) : {
-        __builtin_drivers_start = .;
-        KEEP(*(.builtin_drivers))
-        __builtin_drivers_end = .;
-    } :rodata
 }
