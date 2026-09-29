@@ -16,7 +16,7 @@ static char shell_line[SHELL_LINE_SIZE];
 static unsigned int shell_line_length;
 
 static void shell_print_prompt() {
-  kprint("OS# ");
+  kprint("[root]# ");
 }
 
 static int shell_string_equal(

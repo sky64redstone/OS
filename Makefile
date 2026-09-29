@@ -107,7 +107,7 @@ check-tools:
 	@missing=0; \
 	for tool in $(REQUIRED_TOOLS); do \
 		if command -v "$$tool" >/dev/null 2>&1; then \
-			printf ' $(green)found$(reset): %s -> %s\n' "$$tool" "$$(command -v "$$tool")"; \
+			printf '  $(green)found$(reset): %s -> %s\n' "$$tool" "$$(command -v "$$tool")"; \
 		else \
 			printf '$(red)missing$(reset): %s\n' "$$tool"; \
 			missing=1; \
