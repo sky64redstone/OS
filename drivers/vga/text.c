@@ -117,7 +117,7 @@ void _vga_print(const char* str, int offset) {
 void vga_print(const char* str, int x, int y) {
   int offset;
   if (x < 0 || y < 0) {
-    offset = -1;
+    offset = _get_cursor_offset();
   } else {
     offset = _get_screen_offset(x, y);
   }
