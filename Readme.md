@@ -46,3 +46,8 @@ Cpu architecture specific code is located in `cpu/`
 
 ### Drivers
 The drivers are located in the `drivers/` directory.<br>
+
+## Third party licenses
+The file boot/multiboot.h contains code copyrighted by
+the Free Software Foundation, Inc. It is distributed under
+the license terms included in that file.

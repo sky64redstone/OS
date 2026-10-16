@@ -9,6 +9,7 @@ GRUB_FILE = grub-file
 GRUB_MKRESCUE = grub-mkrescue
 
 PRE = @
+OLEVEL = 0
 
 REQUIRED_TOOLS := $(CC) $(AS) $(LD) $(QEMU) $(GRUB_FILE) $(GRUB_MKRESCUE) \
 			xorriso mformat
@@ -46,7 +47,7 @@ cflags = \
 	-Werror \
 	-Wstrict-prototypes \
 	-g \
-	-O0 \
+	-O$(OLEVEL) \
 	-I.
 
 ldflags = \

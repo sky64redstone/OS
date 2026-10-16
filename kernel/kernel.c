@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include "boot/multiboot.h"
+
 #include "cpu/isr.h"
 #include "cpu/pic.h"
 
@@ -11,62 +13,101 @@
 #include "kernel/initcall.h"
 #include "kernel/kio.h"
 #include "kernel/shell.h"
-#include "kernel/multiboot.h"
 
 #include "version.h"
 
-#define MULTIBOOT_BOOTLOADER_MAGIC 0x2BADB002
+#define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
-void kmain(uint32_t magic, struct multiboot_info* info) {
+void kmain(uint32_t magic, multiboot_info_t* info) {
   stdout.put = vga_kput;
   stdout.print = vga_kprint;
 
   if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
     kprintf("\nInvalid multiboot magic number (0x%x)\n", magic);
-    while (1) {
-      asm volatile("cli; hlt");
-    }
+    return;
   }
 
   vga_clear_screen();
   kprint(str_welcome);
 
-  if (info->flags & MULTIBOOT_FLAG_BOOTDEV) {
-    uint8_t drive = (info->boot_device >> 24) & 0xff;
-    uint8_t part1 = (info->boot_device >> 16) & 0xff;
-    uint8_t part2 = (info->boot_device >> 8) & 0xff;
-    uint8_t part3 = info->boot_device & 0xff;
+  /* Print out the flags. */
+  kprintf ("flags = 0x%x\n", (unsigned) info->flags);
 
-    kprintf(
-      "Boot drive: 0x%x\n"
-      "Partitions: %u/%u/%u\n",
-      drive, part1, part2, part3
-    );
+  /* Are mem_* valid? */
+  if (CHECK_FLAG (info->flags, 0))
+    kprintf ("mem_lower = %uKB, mem_upper = %uKB\n",
+            (unsigned) info->mem_lower, (unsigned) info->mem_upper);
+
+  /* Is boot_device valid? */
+  if (CHECK_FLAG (info->flags, 1))
+    kprintf ("boot_device = 0x%x\n", (unsigned) info->boot_device);
+
+  /* Are mods_* valid? */
+  if (CHECK_FLAG (info->flags, 3))
+  {
+    multiboot_module_t *mod;
+    unsigned int i;
+
+    kprintf ("mods_count = %d, mods_addr = 0x%x\n",
+            (int) info->mods_count, (int) info->mods_addr);
+    for (i = 0, mod = (multiboot_module_t *) info->mods_addr;
+         i < info->mods_count;
+    i++, mod++)
+         kprintf (" mod_start = 0x%x, mod_end = 0x%x, cmdline = %s\n",
+                 (unsigned) mod->mod_start,
+                 (unsigned) mod->mod_end,
+                 (char *) mod->cmdline);
   }
 
-  if (info->flags & MULTIBOOT_FLAG_MEM_MAP) {
-    uint32_t current = info->mmap_addr;
-    uint32_t end = info->mmap_addr + info->mmap_length;
-
-    while (current < end) {
-      struct multiboot_mmap_entry* entry = (struct multiboot_mmap_entry*)current;
-
-      kprintf(
-        "memory: base=%x%08x length=%x%08x type=%u\n",
-        (uint32_t)(entry->addr >> 32),
-        (uint32_t)entry->addr,
-        (uint32_t)(entry->len >> 32),
-        (uint32_t)entry->len,
-        entry->type
-      );
-
-      current += entry->size + sizeof(entry->size);
-    }
+  /* Bits 4 and 5 are mutually exclusive! */
+  if (CHECK_FLAG (info->flags, 4) && CHECK_FLAG (info->flags, 5))
+  {
+    kprintf ("Both bits 4 and 5 are set.\n");
+    return;
   }
 
-  if (info->flags & MULTIBOOT_FLAG_BOOT_LOADER_NAME) {
-    const char* name = (const char*)info->boot_loader_name;
-    kprintf("Boot loader: %s\n", name);
+  /* Is the symbol table of a.out valid? */
+  if (CHECK_FLAG (info->flags, 4))
+  {
+    multiboot_aout_symbol_table_t *multiboot_aout_sym = &(info->u.aout_sym);
+
+    kprintf ("multiboot_aout_symbol_table: tabsize = 0x%0x, "
+    "strsize = 0x%x, addr = 0x%x\n",
+    (unsigned) multiboot_aout_sym->tabsize,
+            (unsigned) multiboot_aout_sym->strsize,
+            (unsigned) multiboot_aout_sym->addr);
+  }
+
+  /* Is the section header table of ELF valid? */
+  if (CHECK_FLAG (info->flags, 5))
+  {
+    multiboot_elf_section_header_table_t *multiboot_elf_sec = &(info->u.elf_sec);
+
+    kprintf ("multiboot_elf_sec: num = %u, size = 0x%x,"
+    " addr = 0x%x, shndx = 0x%x\n",
+    (unsigned) multiboot_elf_sec->num, (unsigned) multiboot_elf_sec->size,
+            (unsigned) multiboot_elf_sec->addr, (unsigned) multiboot_elf_sec->shndx);
+  }
+
+  /* Are mmap_* valid? */
+  if (CHECK_FLAG (info->flags, 6))
+  {
+    multiboot_memory_map_t *mmap;
+
+    kprintf ("mmap_addr = 0x%x, mmap_length = 0x%x\n",
+            (unsigned) info->mmap_addr, (unsigned) info->mmap_length);
+    for (mmap = (multiboot_memory_map_t *) info->mmap_addr;
+         (unsigned long) mmap < info->mmap_addr + info->mmap_length;
+    mmap = (multiboot_memory_map_t *) ((unsigned long) mmap
+    + mmap->size + sizeof (mmap->size)))
+         kprintf (" size = 0x%x, base_addr = 0x%x%08x,"
+         " length = 0x%x%08x, type = 0x%x\n",
+         (unsigned) mmap->size,
+                 (unsigned) (mmap->addr >> 32),
+                 (unsigned) (mmap->addr & 0xffffffff),
+                 (unsigned) (mmap->len >> 32),
+                 (unsigned) (mmap->len & 0xffffffff),
+                 (unsigned) mmap->type);
   }
 
   /*
