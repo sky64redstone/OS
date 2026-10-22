@@ -1,10 +1,20 @@
+#include <stdint.h>
+
 #include "shell.h"
 
 #include "kernel/kio.h"
+#include "mm/page.h"
 #include "drivers/vga/text.h"
 #include "kernel/version.h"
 
 #define SHELL_LINE_SIZE 128
+
+/* TODO global panic impl */
+#define kpanic(...)  \
+  kprintf(__VA_ARGS__); \
+  while (1)          \
+    asm volatile ("cli; hlt")
+
 
 struct shell_command {
   const char* name;
@@ -47,6 +57,7 @@ static void shell_command_help(const char* arguments);
 static void shell_command_clear(const char* arguments);
 static void shell_command_echo(const char* arguments);
 static void shell_command_version(const char* arguments);
+static void shell_command_paging_test(const char* arguments);
 
 static const struct shell_command shell_commands[] = {
   {
@@ -68,6 +79,11 @@ static const struct shell_command shell_commands[] = {
     "version",
     "show kernel version",
     shell_command_version
+  },
+  {
+    "test_paging",
+    "Test kernel paging",
+    shell_command_paging_test
   }
 };
 
@@ -103,6 +119,43 @@ static void shell_command_version(const char* arguments) {
   (void)arguments;
 
   kprint(str_welcome);
+}
+
+static void shell_command_paging_test(const char* arguments) {
+  (void)arguments;
+
+  uint32_t physical = frame_alloc();
+
+  if (physical == FRAME_ALLOC_FAILED) {
+    /* FIXME a shell command shouldn't panic on purpose */
+    kpanic("Failed to allocate a frame\n");
+  }
+
+  if (!paging_map_page(0x40000000, physical, PAGE_WRITE)) {
+    frame_free(physical);
+    kpanic("Failed to map a page\n");
+  }
+
+  volatile uint32_t* test_address =
+    (volatile uint32_t*)(uintptr_t)0x40000000;
+
+  *test_address = 0x12345678;
+
+  if (*test_address != 0x12345678) {
+    kpanic("Test data not consistent\n");
+  }
+
+  uint32_t translated;
+
+  if (!paging_translate(0x40000000, &translated)) {
+    kpanic("Translation failed\n");
+  }
+
+  if (translated != physical) {
+    kpanic("Translation doesn't match physical address\n");
+  }
+
+  kprint("All tests passed!\n");
 }
 
 static void shell_execute() {

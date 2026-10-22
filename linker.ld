@@ -14,6 +14,8 @@ PHDRS {
 SECTIONS {
     . = 0x100000;
 
+    __kernel_start = . ;
+
     .multiboot ALIGN(4) : {
       KEEP(*(.multiboot))
     } :text
@@ -44,4 +46,6 @@ SECTIONS {
         *(.bss)
         *(COMMON)
     } :data
+
+    __kernel_end = . ;
 }

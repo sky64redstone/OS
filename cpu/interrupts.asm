@@ -1,3 +1,5 @@
+[bits 32]
+
 ; isr_handler defined in cpu/isr.h
 [extern isr_handler]
 

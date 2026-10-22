@@ -5,6 +5,8 @@
 #include "cpu/isr.h"
 #include "cpu/pic.h"
 
+#include "mm/page.h"
+
 #include "drivers/ps2/ps2.h"
 #include "drivers/ps2/keyboard.h"
 #include "drivers/vga/text.h"
@@ -18,6 +20,76 @@
 
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
+extern void* __kernel_start;
+extern void* __kernel_end;
+
+size_t multiboot1_convert_memory_map(
+  uint32_t mmap_addr,
+  uint32_t mmap_length,
+  memory_region_t* regions,
+  size_t capacity
+) {
+  uintptr_t current = mmap_addr;
+  uintptr_t end = (uintptr_t)mmap_addr + mmap_length;
+  size_t count = 0;
+
+  if (end < current || regions == NULL) {
+    return 0;
+  }
+
+  while (current < end) {
+    if (end - current < sizeof(uint32_t)) {
+      return 0;
+    }
+
+    uint32_t entry_size = *(const uint32_t*)current;
+
+    if (entry_size < 20 || entry_size > end - current - 4) {
+      return 0;
+    }
+
+    const multiboot_memory_map_t* entry = 
+      (const multiboot_memory_map_t*)current;
+
+    if (count >= capacity) {
+      return count;
+    }
+
+    regions[count].base = entry->addr;
+    regions[count].length = entry->len;
+    regions[count].type = entry->type;
+    count++;
+
+    current += (uintptr_t)entry_size + 4;
+  }
+
+  return count;
+}
+
+void memory_init(multiboot_info_t* info) {
+  memory_region_t regions[25];
+  uint32_t region_count = multiboot1_convert_memory_map(
+    info->mmap_addr, info->mmap_length,
+    regions, 25
+  );
+
+  frame_allocator_init(
+    regions,
+    region_count,
+    (uintptr_t)&__kernel_start,
+    (uintptr_t)&__kernel_end
+  );
+
+  frame_reserve_range(info->mmap_addr, info->mmap_length);
+
+  /*
+   * Reserve other bootloader-owned ranges here, including
+   * separately stored modules and memory-map buffers.
+   */
+
+  paging_enable_bootstrap();
+}
+
 void kmain(uint32_t magic, multiboot_info_t* info) {
   stdout.put = vga_kput;
   stdout.print = vga_kprint;
@@ -26,6 +98,10 @@ void kmain(uint32_t magic, multiboot_info_t* info) {
     kprintf("\nInvalid multiboot magic number (0x%x)\n", magic);
     return;
   }
+
+  /*
+   *
+   */
 
   vga_clear_screen();
   kprint(str_welcome);
@@ -109,6 +185,8 @@ void kmain(uint32_t magic, multiboot_info_t* info) {
                  (unsigned) (mmap->len & 0xffffffff),
                  (unsigned) mmap->type);
   }
+
+  memory_init(info);
 
   /*
    * Install exception and hardware IRQ gates, but do not globally enable
