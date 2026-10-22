@@ -34,5 +34,6 @@
   uint32_t frame_alloc();
   /* returns 1 on success and 0 on failure. */
   int frame_free(uint32_t physical_address);
+  void frame_print_regions();
 
 #endif

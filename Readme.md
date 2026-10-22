@@ -17,9 +17,9 @@ Tools you need: <br>
 - `xorriso`
 - `mformat`
 
-On arch linux:
+Check which tools are installed and can be found:
 ```
-# pacman -S gcc binutils nasm qemu-desktop grub xorriso mtools
+$ make check-tools
 ```
 
 Build and run the project

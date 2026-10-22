@@ -305,3 +305,40 @@ int frame_free(uint32_t physical_address) {
   return 1;
 }
 
+void frame_print_regions() {
+  uint32_t curr = 0;
+  uint32_t last = 0;
+  /*
+   * 0 - free
+   * 1 - free
+   * 2 - reserved
+   * 3 - reserved
+   */
+  int stat = -1;
+  do {
+    uint32_t off  = curr & 31;
+    uint32_t mask = 1 << off;
+    uint32_t idx  = curr >> 5;
+    int curr_stat = ((frame_bitmap[idx] & mask) >> off) |
+                    ((allocated_bitmap[idx] & mask) >> (off-1));
+
+    if (stat != curr_stat) {
+      if (stat >= 0) {
+        kprintf(
+          "region 0x%08x-0x%08x : %s\n",
+          last * PAGE_SIZE, (curr - 1) * PAGE_SIZE,
+          stat == 0 ? "free" : stat == 1 ? "unavailable" : "allocated"
+        );
+      }
+      last = curr;
+      stat = curr_stat;
+    }
+    curr++;
+  } while (curr < MAX_FRAMES);
+
+  kprintf(
+    "region 0x%08x-0x%08x : %s\n",
+    last * PAGE_SIZE, 0xFFFFFFFF,
+    stat == 0 ? "free" : stat == 1 ? "unavailable" : "allocated"
+  );
+}
