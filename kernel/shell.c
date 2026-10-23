@@ -1,10 +1,20 @@
+#include <stdint.h>
+
 #include "shell.h"
 
 #include "kernel/kio.h"
+#include "mm/page.h"
 #include "drivers/vga/text.h"
 #include "kernel/version.h"
 
 #define SHELL_LINE_SIZE 128
+
+/* TODO global panic impl */
+#define kpanic(...)     \
+  kprintf(__VA_ARGS__); \
+  while (1)             \
+    asm volatile ("cli; hlt")
+
 
 struct shell_command {
   const char* name;
@@ -43,10 +53,15 @@ static char* shell_skip_spaces(char* string) {
   return string;
 }
 
+static void test_paging();
+static void test_frame_alloc();
+
 static void shell_command_help(const char* arguments);
 static void shell_command_clear(const char* arguments);
 static void shell_command_echo(const char* arguments);
 static void shell_command_version(const char* arguments);
+static void shell_command_test(const char* arguments);
+static void shell_command_frame_regions(const char* arguments);
 
 static const struct shell_command shell_commands[] = {
   {
@@ -68,6 +83,16 @@ static const struct shell_command shell_commands[] = {
     "version",
     "show kernel version",
     shell_command_version
+  },
+  {
+    "test",
+    "test various kernel functions",
+    shell_command_test
+  },
+  {
+    "regions",
+    "print all memory frame regions",
+    shell_command_frame_regions
   }
 };
 
@@ -103,6 +128,30 @@ static void shell_command_version(const char* arguments) {
   (void)arguments;
 
   kprint(str_welcome);
+}
+
+static void shell_command_test(const char* arguments) {
+  if (shell_string_equal(arguments, "paging")) {
+    test_paging();
+    return;
+  }
+  if (shell_string_equal(arguments, "frame_alloc")) {
+    test_frame_alloc();
+    return;
+  }
+
+  kprint(
+    "Usage: test FUNCTION\n"
+    "\n"
+    "Supported values:\n"
+    "paging - Test kernel paging and memory translation\n"
+    "frame_alloc - Test allocating and freeing frames\n"
+  );
+}
+
+static void shell_command_frame_regions(const char* arguments) {
+  (void)arguments;
+  frame_print_regions();
 }
 
 static void shell_execute() {
@@ -195,4 +244,68 @@ void shell_input(char character) {
   shell_line[shell_line_length] = '\0';
 
   kput(character);
+}
+
+/*
+ * Test code region
+ */
+
+static void test_paging() {
+  uint32_t physical = frame_alloc();
+
+  if (physical == FRAME_ALLOC_FAILED) {
+    /* FIXME a shell command shouldn't panic on purpose */
+    kpanic("Failed to allocate a frame\n");
+  }
+
+  if (!paging_map_page(0x40000000, physical, PAGE_WRITE)) {
+    frame_free(physical);
+    kpanic("Failed to map a page\n");
+  }
+
+  volatile uint32_t* test_address =
+    (volatile uint32_t*)(uintptr_t)0x40000000;
+
+  *test_address = 0x12345678;
+
+  if (*test_address != 0x12345678) {
+    kpanic("Test data not consistent\n");
+  }
+
+  uint32_t translated;
+
+  if (!paging_translate(0x40000000, &translated)) {
+    kpanic("Translation failed\n");
+  }
+
+  if (translated != physical) {
+    kpanic("Translation doesn't match physical address\n");
+  }
+
+  kprint("All tests passed!\n");
+}
+
+static void test_frame_alloc() {
+  /* TODO: alloc 2 frames, free the first, then print */
+  kprint("\nREGIONS==============\n");
+  frame_print_regions();
+  kprint("=====================\n");
+
+  uint32_t frame = frame_alloc();
+  kprintf("Allocated frame %x\n", frame);
+
+  kprint("\nREGIONS==============\n");
+  frame_print_regions();
+  kprint("=====================\n");
+
+  int success = frame_free(frame);
+  if (!success) {
+    kprint("Failed to free frame\n");
+    return;
+  }
+  kprintf("Freed frame %x\n", frame);
+
+  kprint("\nREGIONS==============\n");
+  frame_print_regions();
+  kprint("=====================\n");
 }

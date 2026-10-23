@@ -1,7 +1,9 @@
 # OS
-An Operating System for x86 architectures. Written in C and assembly (Intel Syntax)
+An Operating System for x86 architectures.
+Written in C and assembly (Intel Syntax)
 
-![screenshot of the OS running](https://github.com/sky64redstone/OS/blob/master/screenshot.png?raw=true)
+![screenshot of the OS running](
+https://github.com/sky64redstone/OS/blob/master/screenshot.png?raw=true)
 
 ## Compiling
 This project uses Makefiles with gcc, binutils and nasm to compile.<br>
@@ -15,9 +17,9 @@ Tools you need: <br>
 - `xorriso`
 - `mformat`
 
-On arch linux:
+Check which tools are installed and can be found:
 ```
-# pacman -S gcc binutils nasm qemu-desktop grub xorriso mtools
+$ make check-tools
 ```
 
 Build and run the project
@@ -35,10 +37,12 @@ $ make dis
 
 ## Components
 ### Bootloader
-The bootloader is located in the `boot/` git submodule.
+This project uses grub and multiboot 1 to boot.
+Bootloader related code is located in the `boot/` directory.
+
 
 ### Kernel
-The kernel is located in the `kernel/` directory.<br>
+The kernel is located in the `kernel/` directory.
 kmain() is the kernel entry and is implemented in the file kernel/kernel.c
 
 ### CPU
@@ -48,8 +52,11 @@ Cpu architecture specific code is located in `cpu/`
 The drivers are located in the `drivers/` directory.<br>
 
 ## Third party licenses
-This project is released under the Unlicense, except where otherwise noted.
+The drivers are located in the `drivers/` directory.
+To register a new driver use the `BUILTIN_DRIVER` macro.
+It will be automatically loaded at runtime.
 
+## Third party licenses
 The file boot/multiboot.h contains code copyrighted by
 the Free Software Foundation, Inc. It is distributed under
 the license terms included in that file.

@@ -16,7 +16,8 @@ REQUIRED_TOOLS := $(CC) $(AS) $(LD) $(QEMU) $(GRUB_FILE) $(GRUB_MKRESCUE) \
 
 asmfiles = \
 	boot/entry.asm \
-	cpu/interrupts.asm
+	cpu/interrupts.asm \
+	cpu/paging.asm
 
 cfiles = \
 	kernel/kernel.c \
@@ -25,6 +26,7 @@ cfiles = \
 	kernel/init.c \
 	kernel/device.c \
 	kernel/shell.c \
+	mm/page.c \
 	drivers/ports.c \
 	drivers/vga/text.c \
 	drivers/ps2/keyboard.c \
